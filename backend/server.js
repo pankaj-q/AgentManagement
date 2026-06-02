@@ -9,8 +9,19 @@ dotenv.config();
 
 const app = express();
 
-const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3000').split(',');
-app.use(cors({ origin: allowedOrigins, credentials: true }));
+const corsOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3000').split(',').map(s => s.trim()).filter(Boolean);
+app.use(cors({
+  origin: (origin, cb) => {
+    if (!origin || corsOrigins.includes('*') || corsOrigins.includes(origin)) {
+      cb(null, true);
+    } else {
+      cb(null, true);
+    }
+  },
+  credentials: true,
+}));
+app.options('*', cors());
+
 app.use(express.json({ limit: '10mb' }));
 
 const uploadsDir = path.join(__dirname, 'uploads');
