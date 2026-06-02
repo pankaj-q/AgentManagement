@@ -1,5 +1,10 @@
 {
+  "buildCommand": "GENERATE_SOURCEMAP=false NODE_OPTIONS=--no-deprecation react-scripts build",
+  "installCommand": "npm install --legacy-peer-deps",
+  "outputDirectory": "build",
+  "framework": "create-react-app",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
-  ]
+  ],
+  "nodeVersion": "18.x"
 }
