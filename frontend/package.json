@@ -1,7 +1,10 @@
 {
-  "name": "baishnvi-frontend",
+  "name": "mernapp-frontend",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
     "axios": "^1.6.7",
     "react": "^18.2.0",

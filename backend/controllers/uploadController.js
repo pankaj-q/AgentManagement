@@ -1,4 +1,5 @@
 const XLSX = require('xlsx');
+const fs = require('fs');
 const Agent = require('../models/Agent');
 const List = require('../models/List');
 const mongoose = require('mongoose');
@@ -9,22 +10,34 @@ exports.uploadAndDistribute = async (req, res) => {
       return res.status(400).json({ message: 'Please upload a file' });
     }
 
+    const filePath = req.file.path;
+
     const allowedExtensions = ['.csv', '.xlsx', '.xls'];
     const ext = '.' + req.file.originalname.split('.').pop().toLowerCase();
     if (!allowedExtensions.includes(ext)) {
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
       return res.status(400).json({ message: 'Only CSV, XLSX, and XLS files are allowed' });
     }
 
     const agents = await Agent.find();
     if (agents.length === 0) {
-      return res.status(400).json({ message: 'No agents found. Please add at least 5 agents first.' });
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      return res.status(400).json({ message: 'No agents found. Please add agents first.' });
     }
 
-    const workbook = XLSX.readFile(req.file.path);
+    let workbook;
+    try {
+      workbook = XLSX.readFile(filePath);
+    } catch (parseErr) {
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      return res.status(400).json({ message: 'Failed to parse file. Ensure it is a valid CSV or Excel file.' });
+    }
+
     const sheetName = workbook.SheetNames[0];
     const data = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: '' });
 
     if (!data || data.length === 0) {
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
       return res.status(400).json({ message: 'File is empty or could not be parsed' });
     }
 
@@ -40,7 +53,8 @@ exports.uploadAndDistribute = async (req, res) => {
     const validRows = rows.filter((r) => r.firstName && r.phone);
 
     if (validRows.length === 0) {
-      return res.status(400).json({ message: 'No valid rows found. Ensure FirstName and Phone columns exist.' });
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      return res.status(400).json({ message: 'No valid rows found. Ensure first two columns contain FirstName and Phone.' });
     }
 
     const batchId = new mongoose.Types.ObjectId();
@@ -70,21 +84,25 @@ exports.uploadAndDistribute = async (req, res) => {
     const allListItems = distribution.flatMap((d) => d.items);
     await List.insertMany(allListItems);
 
-    const result = await Promise.all(
-      distribution.map(async (d) => {
-        const items = await List.find({ agent: d.agent._id, batchId }).select('-__v');
-        return {
-          agent: { id: d.agent._id, name: d.agent.name, email: d.agent.email },
-          count: items.length,
-          items,
-        };
-      })
-    );
+    const result = distribution.map((d) => ({
+      agent: { id: d.agent._id, name: d.agent.name, email: d.agent.email },
+      count: d.items.length,
+      items: d.items.map((item) => ({
+        firstName: item.firstName,
+        phone: item.phone,
+        notes: item.notes,
+      })),
+    }));
+
+    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
 
     res.json({ message: 'File uploaded and distributed successfully', distribution: result });
 
   } catch (err) {
-    console.error(err.message);
+    if (req.file && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+    console.error('Upload error:', err.message);
     res.status(500).json({ message: 'Server error while processing file' });
   }
 };
@@ -121,7 +139,7 @@ exports.getDistributedLists = async (req, res) => {
 
     res.json(Object.values(grouped));
   } catch (err) {
-    console.error(err.message);
+    console.error('Get lists error:', err.message);
     res.status(500).json({ message: 'Server error' });
   }
 };

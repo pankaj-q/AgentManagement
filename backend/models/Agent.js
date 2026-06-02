@@ -15,14 +15,14 @@ const agentSchema = new mongoose.Schema({
     trim: true,
   },
   mobile: {
-    type: String,
+    type: Number,
     required: true,
     trim: true,
   },
   password: {
     type: String,
     required: true,
-    minlength: 6,
+    minlength: 5,
   },
 }, { timestamps: true });
 

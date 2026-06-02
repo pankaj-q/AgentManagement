@@ -23,6 +23,7 @@ const listSchema = new mongoose.Schema({
   },
   batchId: {
     type: mongoose.Schema.Types.ObjectId,
+    ref: 'Batch',
     required: true,
   },
 }, { timestamps: true });

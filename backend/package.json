@@ -1,8 +1,11 @@
 {
-  "name": "baishnvi-backend",
+  "name": "mernapp-backend",
   "version": "1.0.0",
-  "description": "Backend for agent management and CSV distribution system",
+  "description": "Agent management system - backend API",
   "main": "server.js",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",

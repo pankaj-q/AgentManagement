@@ -1,6 +1,6 @@
 const Agent = require('../models/Agent');
 
-exports.getAgents = async (req, res) => {
+const getAgents = async (req, res) => {
   try {
     const agents = await Agent.find().select('-password').sort('-createdAt');
     res.json(agents);
@@ -10,7 +10,7 @@ exports.getAgents = async (req, res) => {
   }
 };
 
-exports.addAgent = async (req, res) => {
+const addAgent = async (req, res) => {
   try {
     const { name, email, mobile, password } = req.body;
 
@@ -40,7 +40,7 @@ exports.addAgent = async (req, res) => {
   }
 };
 
-exports.deleteAgent = async (req, res) => {
+const  deleteAgent = async (req, res) => {
   try {
     const agent = await Agent.findById(req.params.id);
     if (!agent) {
@@ -53,3 +53,9 @@ exports.deleteAgent = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+module.exports = {
+  getAgents,
+  addAgent,
+  deleteAgent,
+}
