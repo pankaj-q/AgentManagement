@@ -20,8 +20,14 @@ services:
     depends_on:
       - backend
       - mongo
+      - redis
 
   mongo:
     image: mongo
     ports:
       - "27017:27017"
+
+  redis:
+    image: redis  
+    ports:
+      - "6379:6379"
